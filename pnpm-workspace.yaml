@@ -1,0 +1,7 @@
+minimumReleaseAgeExclude:
+  - shadcn-svelte@1.4.1
+
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true

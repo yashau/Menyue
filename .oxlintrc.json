@@ -1,0 +1,32 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"ignorePatterns": [
+		".svelte-kit/**",
+		".wrangler/**",
+		"src/lib/components/ui/**",
+		"worker-configuration.d.ts",
+		"realtime/worker-configuration.d.ts"
+	],
+	"jsPlugins": ["oxlint-tailwindcss"],
+	"settings": {
+		"tailwindcss": {
+			"entryPoint": "src/routes/layout.css"
+		}
+	},
+	"rules": {
+		"tailwindcss/no-unknown-classes": "error",
+		"tailwindcss/no-duplicate-classes": "error",
+		"tailwindcss/no-conflicting-classes": "error",
+		"tailwindcss/no-deprecated-classes": "error",
+		"tailwindcss/no-unnecessary-whitespace": "error",
+		"tailwindcss/no-contradicting-variants": "warn"
+	},
+	"overrides": [
+		{
+			"files": ["src/lib/index.ts"],
+			"rules": {
+				"unicorn/no-empty-file": "off"
+			}
+		}
+	]
+}

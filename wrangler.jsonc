@@ -1,0 +1,30 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "menyue",
+	"compatibility_date": "2026-07-10",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare",
+	},
+	"workers_dev": true,
+	"preview_urls": true,
+	"observability": { "enabled": true, "head_sampling_rate": 1 },
+	"secrets": { "required": ["AUTH_PEPPER"] },
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "menyue",
+			"database_id": "00000000-0000-0000-0000-000000000000",
+			"migrations_dir": "migrations",
+		},
+	],
+	"r2_buckets": [{ "binding": "MEDIA", "bucket_name": "menyue-media" }],
+	"durable_objects": {
+		"bindings": [
+			{ "name": "ORDER_HUB", "class_name": "OrderHub", "script_name": "menyue-realtime" },
+		],
+	},
+	"vars": { "APP_ORIGIN": "http://localhost:5173", "RESTAURANT_ID": "demo" },
+}

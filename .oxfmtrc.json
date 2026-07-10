@@ -1,0 +1,18 @@
+{
+	"$schema": "./node_modules/oxfmt/configuration_schema.json",
+	"printWidth": 100,
+	"singleQuote": true,
+	"useTabs": true,
+	"svelte": true,
+	"sortPackageJson": true,
+	"sortTailwindcss": {
+		"stylesheet": "src/routes/layout.css",
+		"functions": ["cn", "clsx", "cva", "tv"]
+	},
+	"ignorePatterns": [
+		"src/lib/components/ui/**",
+		"worker-configuration.d.ts",
+		"realtime/worker-configuration.d.ts",
+		"pnpm-lock.yaml"
+	]
+}

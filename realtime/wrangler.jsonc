@@ -1,0 +1,10 @@
+{
+	"$schema": "../node_modules/wrangler/config-schema.json",
+	"name": "menyue-realtime",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-07-10",
+	"compatibility_flags": ["nodejs_compat"],
+	"durable_objects": { "bindings": [{ "name": "ORDER_HUB", "class_name": "OrderHub" }] },
+	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["OrderHub"] }],
+	"observability": { "enabled": true, "head_sampling_rate": 1 },
+}
