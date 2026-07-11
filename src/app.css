@@ -1,0 +1,265 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/*
+ * shadcn-svelte's components style off `data-checked:` / `data-open:` etc.
+ * shorthands, but bits-ui emits these as `data-state="checked|open|…"`.
+ * `init` normally registers these variants; this project was set up by hand,
+ * so map them explicitly. Without this, switches/checkboxes never pick up
+ * their checked styling and collapse to a filled square.
+ */
+@custom-variant data-checked (&[data-state='checked']);
+@custom-variant data-unchecked (&[data-state='unchecked']);
+@custom-variant data-open (&[data-state='open']);
+@custom-variant data-closed (&[data-state='closed']);
+
+/*
+ * Menyue — warm island-inspired design system.
+ * Sand & warm-white surfaces, deep ink text, lagoon-green primary,
+ * coral/terracotta accents, editorial serif display used selectively.
+ */
+@theme {
+	--font-sans:
+		system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+	--font-display:
+		'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, ui-serif, serif;
+
+	/* Sand / warm neutrals */
+	--color-sand-50: #fdfbf6;
+	--color-sand-100: #f8f2e7;
+	--color-sand-200: #efe5d3;
+	--color-sand-300: #e3d4b9;
+	--color-sand-400: #cbb488;
+	--color-sand-500: #b0925f;
+
+	/* Deep ink */
+	--color-ink-50: #eef1f0;
+	--color-ink-400: #4a5b55;
+	--color-ink-600: #26332e;
+	--color-ink-700: #1b2521;
+	--color-ink-800: #131c18;
+	--color-ink-900: #0d1512;
+
+	/* Lagoon green (primary) */
+	--color-lagoon-50: #e8f6f1;
+	--color-lagoon-100: #c8ebe0;
+	--color-lagoon-200: #94d8c4;
+	--color-lagoon-300: #5cbfa6;
+	--color-lagoon-400: #2ea38a;
+	--color-lagoon-500: #158872;
+	--color-lagoon-600: #0d6d5b;
+	--color-lagoon-700: #0a5749;
+	--color-lagoon-800: #084439;
+	--color-lagoon-900: #06342c;
+
+	/* Coral / terracotta accent */
+	--color-coral-50: #fdefe8;
+	--color-coral-100: #fadac9;
+	--color-coral-300: #f2a380;
+	--color-coral-400: #ea7a4f;
+	--color-coral-500: #de5f34;
+	--color-coral-600: #c24a24;
+	--color-coral-700: #9d3a1c;
+
+	--radius-card: 1rem;
+}
+
+@layer base {
+	:root {
+		--safe-top: env(safe-area-inset-top, 0px);
+		--safe-bottom: env(safe-area-inset-bottom, 0px);
+		--safe-left: env(safe-area-inset-left, 0px);
+		--safe-right: env(safe-area-inset-right, 0px);
+		color-scheme: light;
+	}
+
+	html {
+		-webkit-text-size-adjust: 100%;
+	}
+
+	body {
+		background-color: var(--color-sand-100);
+		background-image:
+			radial-gradient(120% 80% at 15% -10%, color-mix(in oklab, var(--color-lagoon-100) 40%, transparent) 0%, transparent 55%),
+			radial-gradient(120% 90% at 100% 0%, color-mix(in oklab, var(--color-sand-50) 90%, transparent) 0%, transparent 60%);
+		background-attachment: fixed;
+		color: var(--color-ink-800);
+		font-family: var(--font-sans);
+		font-feature-settings: 'kern';
+		text-rendering: optimizeLegibility;
+		-webkit-font-smoothing: antialiased;
+		min-height: 100dvh;
+	}
+
+	* {
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	:where(button, a, input, select, textarea):focus-visible {
+		outline: 2px solid var(--color-lagoon-500);
+		outline-offset: 2px;
+		border-radius: 4px;
+	}
+
+	.font-display {
+		font-family: var(--font-display);
+		letter-spacing: -0.01em;
+	}
+}
+
+@layer utilities {
+	.pt-safe {
+		padding-top: max(var(--safe-top), 0px);
+	}
+	/* safe-area inset PLUS a comfortable base, so sticky headers never jam
+	   against the top edge / status bar / notch */
+	.pt-safe-header {
+		padding-top: calc(var(--safe-top) + 0.5rem);
+	}
+	.pb-safe {
+		padding-bottom: max(var(--safe-bottom), 0px);
+	}
+	.pb-safe-4 {
+		padding-bottom: calc(1rem + var(--safe-bottom));
+	}
+	.pl-safe {
+		padding-left: max(var(--safe-left), 0px);
+	}
+	.pr-safe {
+		padding-right: max(var(--safe-right), 0px);
+	}
+	.no-scrollbar {
+		scrollbar-width: none;
+	}
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+	}
+	/* Minimum 44px touch target helper */
+	.touch-target {
+		min-height: 44px;
+		min-width: 44px;
+	}
+}
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────
+ * shadcn-svelte design tokens (base colour: "mist" — cool blue-grey neutral).
+ *
+ * These power the ADMIN and COUNTER surfaces only. They live in their own
+ * variable namespace (--background, --card, --primary, …) that the branded
+ * customer menu never references, so the menu is completely unaffected.
+ *
+ * Light/dark follows the operating system via `prefers-color-scheme`; there is
+ * no class toggle and no JS, so there's no theme flash. The admin/counter
+ * shells opt their subtree into dark native controls with `color-scheme`.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+@theme inline {
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) + 4px);
+
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--color-chart-1: var(--chart-1);
+	--color-chart-2: var(--chart-2);
+	--color-chart-3: var(--chart-3);
+	--color-chart-4: var(--chart-4);
+	--color-chart-5: var(--chart-5);
+	--color-sidebar: var(--sidebar);
+	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar-primary: var(--sidebar-primary);
+	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-accent: var(--sidebar-accent);
+	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+	--color-sidebar-border: var(--sidebar-border);
+	--color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+	--radius: 0.625rem;
+	--background: oklch(1 0 0);
+	--foreground: oklch(0.148 0.004 228.8);
+	--card: oklch(1 0 0);
+	--card-foreground: oklch(0.148 0.004 228.8);
+	--popover: oklch(1 0 0);
+	--popover-foreground: oklch(0.148 0.004 228.8);
+	--primary: oklch(0.218 0.008 223.9);
+	--primary-foreground: oklch(0.987 0.002 197.1);
+	--secondary: oklch(0.963 0.002 197.1);
+	--secondary-foreground: oklch(0.218 0.008 223.9);
+	--muted: oklch(0.963 0.002 197.1);
+	--muted-foreground: oklch(0.56 0.021 213.5);
+	--accent: oklch(0.963 0.002 197.1);
+	--accent-foreground: oklch(0.218 0.008 223.9);
+	--destructive: oklch(0.577 0.245 27.325);
+	--border: oklch(0.925 0.005 214.3);
+	--input: oklch(0.925 0.005 214.3);
+	--ring: oklch(0.723 0.014 214.4);
+	--chart-1: oklch(0.872 0.007 219.6);
+	--chart-2: oklch(0.56 0.021 213.5);
+	--chart-3: oklch(0.45 0.017 213.2);
+	--chart-4: oklch(0.378 0.015 216);
+	--chart-5: oklch(0.275 0.011 216.9);
+	--sidebar: oklch(0.987 0.002 197.1);
+	--sidebar-foreground: oklch(0.148 0.004 228.8);
+	--sidebar-primary: oklch(0.218 0.008 223.9);
+	--sidebar-primary-foreground: oklch(0.987 0.002 197.1);
+	--sidebar-accent: oklch(0.963 0.002 197.1);
+	--sidebar-accent-foreground: oklch(0.218 0.008 223.9);
+	--sidebar-border: oklch(0.925 0.005 214.3);
+	--sidebar-ring: oklch(0.723 0.014 214.4);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--background: oklch(0.148 0.004 228.8);
+		--foreground: oklch(0.987 0.002 197.1);
+		--card: oklch(0.218 0.008 223.9);
+		--card-foreground: oklch(0.987 0.002 197.1);
+		--popover: oklch(0.218 0.008 223.9);
+		--popover-foreground: oklch(0.987 0.002 197.1);
+		--primary: oklch(0.925 0.005 214.3);
+		--primary-foreground: oklch(0.218 0.008 223.9);
+		--secondary: oklch(0.275 0.011 216.9);
+		--secondary-foreground: oklch(0.987 0.002 197.1);
+		--muted: oklch(0.275 0.011 216.9);
+		--muted-foreground: oklch(0.723 0.014 214.4);
+		--accent: oklch(0.275 0.011 216.9);
+		--accent-foreground: oklch(0.987 0.002 197.1);
+		--destructive: oklch(0.704 0.191 22.216);
+		--border: oklch(1 0 0 / 10%);
+		--input: oklch(1 0 0 / 15%);
+		--ring: oklch(0.56 0.021 213.5);
+		--chart-1: oklch(0.872 0.007 219.6);
+		--chart-2: oklch(0.56 0.021 213.5);
+		--chart-3: oklch(0.45 0.017 213.2);
+		--chart-4: oklch(0.378 0.015 216);
+		--chart-5: oklch(0.275 0.011 216.9);
+		--sidebar: oklch(0.218 0.008 223.9);
+		--sidebar-foreground: oklch(0.987 0.002 197.1);
+		--sidebar-primary: oklch(0.488 0.243 264.376);
+		--sidebar-primary-foreground: oklch(0.987 0.002 197.1);
+		--sidebar-accent: oklch(0.275 0.011 216.9);
+		--sidebar-accent-foreground: oklch(0.987 0.002 197.1);
+		--sidebar-border: oklch(1 0 0 / 10%);
+		--sidebar-ring: oklch(0.56 0.021 213.5);
+	}
+}

@@ -1,0 +1,11 @@
+node_modules/
+.svelte-kit/
+.wrangler/
+.tmp/
+build/
+dist/
+e2e/.results/
+e2e/screenshots/
+e2e/.start
+*.log
+.DS_Store
