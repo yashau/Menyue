@@ -1,15 +1,14 @@
 import { execFile, execFileSync, spawn } from 'node:child_process';
 import { mkdir, readFile } from 'node:fs/promises';
-import { createServer } from 'node:net';
 import { networkInterfaces } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { acquireExclusiveLock, recoverStaleExclusiveLock, releaseExclusiveLock } from './lock-file.mjs';
+import { assertPortAvailable, waitForCustomerRuntime } from './dev-runtime-integrity.mjs';
 
 const root = resolve('.');
 const stateDirectory = resolve(root, '.wrangler/state');
 const startupLock = resolve(root, '.wrangler/menyue-dev-startup.lock');
 const wrangler = resolve(root, 'node_modules/wrangler/bin/wrangler.js');
-const vite = resolve(root, 'node_modules/vite/bin/vite.js');
 
 const children = new Set();
 let stopping = false;
@@ -80,26 +79,6 @@ function privateLanAddresses() {
 	return [...addresses];
 }
 
-async function assertPortAvailable() {
-	for (const host of ['0.0.0.0', '127.0.0.1']) {
-		const probe = createServer();
-		try {
-			await new Promise((resolve, reject) => {
-				probe.once('error', reject);
-				probe.listen({ host, port: 5173 }, resolve);
-			});
-		} catch (error) {
-			const detail = error instanceof Error ? `${error.code ?? error.name}: ${error.message}` : String(error);
-			throw new Error(
-				`Refusing to start Menyue: port 5173 is already occupied (${detail}). ` +
-					'No process was stopped; close the owning process or choose a different port explicitly.',
-			);
-		} finally {
-			if (probe.listening) await new Promise((resolve) => probe.close(resolve));
-		}
-	}
-}
-
 function isRunning(child) {
 	return child.exitCode === null && child.signalCode === null;
 }
@@ -164,40 +143,35 @@ process.on('message', (message) => {
 });
 
 async function waitForReady() {
-	const deadline = Date.now() + 120_000;
-	while (!stopping && Date.now() < deadline) {
-		try {
-			const response = await fetch('http://127.0.0.1:5173/api/health', { redirect: 'manual' });
-			const body = await response.json().catch(() => null);
-			if (response.status !== 200 || body?.service !== 'menyue' || body?.runtime !== 'web') throw new Error(`Unexpected Menyue readiness response: HTTP ${response.status}.`);
-			const lan = privateLanAddresses().map((address) => `http://${address}:5173`);
-			console.log(`Menyue development server is ready at http://localhost:5173 (HTTP ${response.status}).`);
-			console.log(`LAN URL${lan.length === 1 ? '' : 's'}: ${lan.length ? lan.join(', ') : 'none (no active private IPv4 address detected)'}.`);
-			return;
-		} catch {
-			await sleep(250);
-		}
-	}
-	throw new Error(
-		stopping
-			? 'Development startup was interrupted.'
-			: 'Timed out waiting for http://0.0.0.0:5173.',
-	);
+	if (stopping) throw new Error('Development startup was interrupted.');
+	const runtime = await waitForCustomerRuntime('http://127.0.0.1:5173');
+	const lan = privateLanAddresses().map((address) => `http://${address}:5173`);
+	console.log(`Menyue development server is ready at http://localhost:5173 with ${runtime.modules} verified JavaScript modules.`);
+	console.log(`LAN URL${lan.length === 1 ? '' : 's'}: ${lan.length ? lan.join(', ') : 'none (no active private IPv4 address detected)'}.`);
 }
 
 async function main() {
 	await acquireStartupLock();
+	try {
+		await assertPortAvailable();
+	} catch (error) {
+		const detail = error instanceof Error
+			? error.message.replace(/^Port 5173 is already occupied \((.*)\)\.$/, '$1')
+			: String(error);
+		throw new Error(
+			`Refusing to start Menyue: port 5173 is already occupied (${detail}). ` +
+				'No process was stopped; close the owning process or choose a different port explicitly.',
+		);
+	}
 	execFileSync(process.execPath, [resolve(root, 'scripts/setup-local.mjs')], {
 		cwd: root,
 		stdio: 'inherit',
 		shell: false,
 	});
-	await assertPortAvailable();
-	execFileSync(process.execPath, [vite, 'build'], {
+	execFileSync(process.execPath, [resolve(root, 'scripts/build-dev.mjs')], {
 		cwd: root,
 		stdio: 'inherit',
 		shell: false,
-		env: { ...process.env, MENYUE_WRANGLER_CONFIG: 'wrangler.dev.jsonc' },
 	});
 	start(wrangler, [
 		'dev',

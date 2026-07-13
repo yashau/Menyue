@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { networkInterfaces, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { chromium } from '@playwright/test';
+import { verifyCustomerRuntime } from './dev-runtime-integrity.mjs';
 
 const root = resolve('.');
 const wrangler = resolve(root, 'node_modules/wrangler/bin/wrangler.js');
@@ -99,6 +100,8 @@ async function verifyOrigin(base) {
 		const response = await request(base, path);
 		assert(response.status === 200 && response.headers.get('content-type')?.startsWith('image/'), `${base}${path} did not serve image media.`);
 	}
+	const runtime = await verifyCustomerRuntime(base);
+	console.log(`Verified ${runtime.modules} customer hydration modules at ${base}.`);
 	const admin = await login(base, '/admin/login', { username: 'admin', password: 'menyue-admin-local' });
 	assert((await request(base, '/admin', {}, admin)).status === 200, `${base}/admin rejected its authenticated session.`);
 	const counter = await login(base, '/counter/login', { username: 'counter', password: 'menyue-counter-local' });

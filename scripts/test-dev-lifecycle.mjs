@@ -86,6 +86,56 @@ async function expectHarnessRejectsForeignHttpServer() {
 	}
 }
 
+async function expectStaleMenyueRuntimeToBeRejected() {
+	const stale = createServer((request, response) => {
+		if (request.url === '/api/health') {
+			response.setHeader('content-type', 'application/json');
+			response.end(JSON.stringify({ service: 'menyue', runtime: 'web' }));
+			return;
+		}
+		if (request.url === '/t/table-one-local') {
+			response.setHeader('content-type', 'text/html');
+			response.end('<!doctype html><script>import("/_app/immutable/entry/start.missing.js")</script>');
+			return;
+		}
+		response.statusCode = 404;
+		response.end('missing');
+	});
+	await new Promise((resolve) => stale.listen({ host: '0.0.0.0', port: 5173 }, resolve));
+	try {
+		const harness = spawn(process.execPath, ['scripts/playwright-dev-server.mjs'], {
+			cwd: root,
+			shell: false,
+			stdio: ['ignore', 'pipe', 'pipe'],
+		});
+		let harnessOutput = '';
+		harness.stdout.on('data', (chunk) => (harnessOutput += chunk));
+		harness.stderr.on('data', (chunk) => (harnessOutput += chunk));
+		const harnessCode = await new Promise((resolve) => harness.once('exit', resolve));
+		if (harnessCode === 0 || !harnessOutput.includes('Refusing to reuse Menyue') || !harnessOutput.includes('hydration assets are inconsistent'))
+			throw new Error(`The Playwright harness reused a stale Menyue runtime.\n${harnessOutput}`);
+
+		const build = spawn(process.execPath, ['scripts/build-dev.mjs'], {
+			cwd: root,
+			shell: false,
+			stdio: ['ignore', 'pipe', 'pipe'],
+		});
+		let buildOutput = '';
+		build.stdout.on('data', (chunk) => (buildOutput += chunk));
+		build.stderr.on('data', (chunk) => (buildOutput += chunk));
+		const buildCode = await new Promise((resolve) => build.once('exit', resolve));
+		if (buildCode === 0 || !buildOutput.includes('Refusing to overwrite the local Worker build while port 5173 is occupied'))
+			throw new Error(`dev:build was allowed to overwrite the active Worker build.\n${buildOutput}`);
+
+		const health = await fetch('http://127.0.0.1:5173/api/health');
+		if (health.status !== 200) throw new Error('The stale Menyue runtime was disturbed by an integrity rejection.');
+		console.log('Stale Menyue runtime was rejected without allowing a build overwrite.');
+	} finally {
+		stale.closeAllConnections?.();
+		await new Promise((resolve) => stale.close(resolve));
+	}
+}
+
 async function runCycle(cycle) {
 	await waitForPortToClose();
 	const child = spawn(process.execPath, ['scripts/dev.mjs'], {
@@ -119,6 +169,7 @@ async function runCycle(cycle) {
 await waitForPortToClose();
 await expectForeignOccupantToBePreserved();
 await expectHarnessRejectsForeignHttpServer();
+await expectStaleMenyueRuntimeToBeRejected();
 await runCycle(1);
 await runCycle(2);
 console.log(

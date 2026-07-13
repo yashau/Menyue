@@ -2,6 +2,7 @@ import { execFile, spawn } from 'node:child_process';
 import { mkdir, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { acquireExclusiveLock, recoverStaleExclusiveLock, releaseExclusiveLock } from './lock-file.mjs';
+import { inspectCustomerRuntime, waitForCustomerRuntime } from './dev-runtime-integrity.mjs';
 
 const root = resolve('.');
 const baseURL = 'http://localhost:5173';
@@ -27,16 +28,6 @@ function processIsRunning(pid) {
 		return true;
 	} catch (error) {
 		return error?.code === 'EPERM';
-	}
-}
-
-async function isReady() {
-	try {
-		const response = await fetch(`${baseURL}/api/health`, { redirect: 'manual', signal: AbortSignal.timeout(2_000) });
-		const body = await response.json().catch(() => null);
-		return response.status === 200 && body?.service === 'menyue' && body?.runtime === 'web';
-	} catch {
-		return false;
 	}
 }
 
@@ -79,10 +70,11 @@ async function releaseHarnessLock() {
 async function waitForReady(label) {
 	const deadline = Date.now() + readinessTimeout;
 	while (Date.now() < deadline) {
-		if (await isReady()) {
+		try {
+			const runtime = await waitForCustomerRuntime(baseURL, 1);
 			console.log(`[playwright-server] ${label}: ${baseURL} is ready.`);
-			return;
-		}
+			return runtime;
+		} catch { /* Keep polling while the owned Worker starts. */ }
 		if (child && child.exitCode !== null) {
 			throw new Error(
 				`Menyue development server exited before becoming ready (code ${child.exitCode ?? 1}).\n` +
@@ -128,7 +120,10 @@ async function stayAlive() {
 }
 
 async function main() {
-	if (await isReady()) {
+	let existing = await inspectCustomerRuntime(baseURL);
+	if (existing.menyue) {
+		if (existing.error)
+			throw new Error(`Refusing to reuse Menyue at ${baseURL}: its customer hydration assets are inconsistent. ${existing.error}`);
 		console.log(`[playwright-server] Reusing the ready server at ${baseURL}; it will not be stopped by this harness.`);
 		await stayAlive();
 		return;
@@ -142,7 +137,10 @@ async function main() {
 		return;
 	}
 
-	if (await isReady()) {
+	existing = await inspectCustomerRuntime(baseURL);
+	if (existing.menyue) {
+		if (existing.error)
+			throw new Error(`Refusing to reuse Menyue at ${baseURL}: its customer hydration assets are inconsistent. ${existing.error}`);
 		console.log(`[playwright-server] Reusing the server that became ready at ${baseURL}.`);
 		await stayAlive();
 		return;
