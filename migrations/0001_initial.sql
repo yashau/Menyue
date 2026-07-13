@@ -1,5 +1,5 @@
 PRAGMA foreign_keys = ON;
-CREATE TABLE IF NOT EXISTS restaurants (id TEXT PRIMARY KEY, currency TEXT NOT NULL DEFAULT 'MVR', menu_revision INTEGER NOT NULL DEFAULT 1, hero_revision INTEGER NOT NULL DEFAULT 1);
+CREATE TABLE IF NOT EXISTS restaurants (id TEXT PRIMARY KEY, currency TEXT NOT NULL DEFAULT 'USD', menu_revision INTEGER NOT NULL DEFAULT 1, hero_revision INTEGER NOT NULL DEFAULT 1);
 CREATE TABLE IF NOT EXISTS site_content (restaurant_id TEXT PRIMARY KEY REFERENCES restaurants(id), title TEXT NOT NULL DEFAULT 'Menyue', description TEXT, cta_label TEXT, cta_url TEXT, hero_asset_id TEXT);
 CREATE TABLE IF NOT EXISTS media_assets (id TEXT PRIMARY KEY, r2_key TEXT UNIQUE NOT NULL, content_type TEXT NOT NULL, bytes INTEGER NOT NULL, sha256 TEXT NOT NULL, state TEXT NOT NULL DEFAULT 'active', created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE IF NOT EXISTS menu_categories (id TEXT PRIMARY KEY, restaurant_id TEXT NOT NULL REFERENCES restaurants(id), code TEXT NOT NULL, name TEXT NOT NULL, description TEXT, position INTEGER NOT NULL, enabled INTEGER NOT NULL DEFAULT 1, archived INTEGER NOT NULL DEFAULT 0, version INTEGER NOT NULL DEFAULT 1, UNIQUE(restaurant_id, code));

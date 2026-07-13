@@ -1,0 +1,3 @@
+# Copied automatically to an ignored .dev.vars file by `pnpm dev:setup`.
+# The setup script replaces this placeholder with a random local-only value.
+AUTH_PEPPER="replace-me-with-a-random-local-value"

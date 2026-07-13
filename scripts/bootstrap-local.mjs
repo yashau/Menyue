@@ -4,15 +4,15 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-const [username, password, counterPassword] = process.argv.slice(2);
+const [username, password] = process.argv.slice(2);
 const pepper = process.env.AUTH_PEPPER;
-if (!username || !password || !counterPassword || !pepper) {
+if (!username || !password || !pepper) {
 	console.error(
-		'Set AUTH_PEPPER then run: pnpm bootstrap:local -- <username> <staff-password> <counter-password>',
+		'Set AUTH_PEPPER then run: pnpm bootstrap:local -- <username> <staff-password>. Then sign in as an admin and create a counter operator.',
 	);
 	process.exit(1);
 }
-if (password.length < 12 || counterPassword.length < 12)
+if (password.length < 12)
 	throw new Error('Passwords must be at least 12 characters.');
 const credential = (value) => {
 	const salt = randomBytes(24).toString('base64url');
@@ -22,9 +22,8 @@ const credential = (value) => {
 	};
 };
 const admin = credential(password),
-	counter = credential(counterPassword),
 	id = randomUUID();
-const sql = `INSERT INTO users(id,username,display_name,role,password_hash,salt,iterations,must_change_password) SELECT '${id}','${username.replaceAll("'", "''")}','Local administrator','admin','${admin.hash}','${admin.salt}',210000,1 WHERE NOT EXISTS(SELECT 1 FROM users WHERE enabled=1 AND role='admin'); INSERT OR IGNORE INTO counter_credentials(id,password_hash,salt,iterations) VALUES(1,'${counter.hash}','${counter.salt}',210000);`;
+const sql = `INSERT INTO users(id,username,display_name,role,password_hash,salt,iterations,must_change_password) SELECT '${id}','${username.replaceAll("'", "''")}','Local administrator','admin','${admin.hash}','${admin.salt}',210000,1 WHERE NOT EXISTS(SELECT 1 FROM users WHERE enabled=1 AND role='admin');`;
 const work = mkdtempSync(join(tmpdir(), 'menyue-bootstrap-'));
 const sqlFile = join(work, 'bootstrap.sql');
 const wrangler = resolve('node_modules/wrangler/bin/wrangler.js');
@@ -37,5 +36,5 @@ try {
 	rmSync(work, { recursive: true, force: true });
 }
 console.log(
-	'Local administrator initialized. Sign in at /admin/login and change the temporary password.',
+	'Local administrator initialized. Sign in at /admin/login, change the temporary password, then create a counter operator at /admin/counter-operators.',
 );

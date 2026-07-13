@@ -1,12 +1,12 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
-	"name": "menyue",
+	"name": "menyue-local",
 	"compatibility_date": "2026-07-10",
 	"compatibility_flags": ["nodejs_compat"],
-	"main": ".svelte-kit/cloudflare/_worker.js",
+	"main": ".svelte-kit/cloudflare-dev/_worker.js",
 	"assets": {
 		"binding": "ASSETS",
-		"directory": ".svelte-kit/cloudflare",
+		"directory": ".svelte-kit/cloudflare-dev",
 	},
 	"workers_dev": true,
 	"preview_urls": true,

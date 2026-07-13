@@ -3,6 +3,10 @@ import { defineConfig } from 'vitest/config';
 import adapter from '@sveltejs/adapter-cloudflare';
 import { sveltekit } from '@sveltejs/kit/vite';
 
+// Development uses its own Worker output directory so adapter cleanup can never
+// race with the directory watched by a running production/preview Worker.
+const wranglerConfig = process.env.MENYUE_WRANGLER_CONFIG ?? 'wrangler.jsonc';
+
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
@@ -12,7 +16,15 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true,
 			},
-			adapter: adapter(),
+			adapter: adapter({
+				config: wranglerConfig,
+				platformProxy: {
+					configPath: wranglerConfig,
+					envFiles: ['.dev.vars'],
+					persist: true,
+					remoteBindings: false,
+				},
+			}),
 		}),
 	],
 	test: {
