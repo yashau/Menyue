@@ -40,11 +40,11 @@
 {/if}
 
 <style>
-	.customer-currency-selector { display: inline-flex; min-height: 2.75rem; margin: 0; border: 1px solid #cbbda9; border-radius: 999px; padding: 0.2rem; background: #fffdf8; }
-	.customer-currency-selector button { min-width: 3.5rem; border: 0; border-radius: 999px; background: transparent; padding: 0.45rem 0.7rem; color: var(--ink, #18372f); font: inherit; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.04em; cursor: pointer; }
-	.customer-currency-selector button:hover { background: #eee4d4; }
-	.customer-currency-selector button.active { background: var(--ink, #18372f); color: #fffdf8; }
-	.customer-currency-selector button:focus-visible { outline: 3px solid var(--coral, #ec6a45); outline-offset: 2px; }
+	.customer-currency-selector { display: inline-flex; min-height: 2.75rem; margin: 0; border: 1px solid var(--customer-border); border-radius: 999px; padding: 0.2rem; background: var(--customer-surface); }
+	.customer-currency-selector button { min-width: 3.5rem; border: 0; border-radius: 999px; background: transparent; padding: 0.45rem 0.7rem; color: var(--customer-ink); font: inherit; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.04em; cursor: pointer; }
+	.customer-currency-selector button:hover { background: color-mix(in oklch, var(--customer-surface) 82%, var(--customer-primary)); }
+	.customer-currency-selector button.active { background: var(--customer-primary); color: var(--customer-primary-foreground); }
+	.customer-currency-selector button:focus-visible { outline: 3px solid var(--customer-focus); outline-offset: 2px; }
 	@media (max-width: 760px) {
 		.customer-currency-selector button { min-width: 44px; min-height: 44px; padding-inline: 0.4rem; }
 	}

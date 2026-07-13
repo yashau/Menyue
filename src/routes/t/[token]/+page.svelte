@@ -506,11 +506,11 @@
 				/>{/if}<span>{data.menu.hero.title}</span></a
 		>
 		<div class="table-nav-actions">
-			<span class="table-label">{data.table.label}</span><CurrencySelector
+			<span class="table-label">{data.table.label}</span><div class="table-header-currency"><CurrencySelector
 				{base}
 				{quotes}
 				bind:value={selected}
-			/>
+			/></div>
 		</div>
 	</header>
 	<section class="table-intro compact">
@@ -834,7 +834,7 @@
 		grid-template-columns: minmax(0, 1fr) auto;
 		gap: 0.7rem;
 		padding: 0.7rem 0;
-		border-bottom: 1px solid #ddd1be;
+		border-bottom: 1px solid var(--customer-border);
 	}
 	.cart-line > div:first-child {
 		min-width: 0;
@@ -843,17 +843,17 @@
 		overflow-wrap: anywhere;
 	}
 	.cart-line small {
-		color: #63776d;
+		color: var(--customer-muted);
 		font-size: 0.73rem;
 	}
 	.variant-note {
-		color: #9d3d2b !important;
+		color: var(--customer-danger) !important;
 	}
 	.cart-remove {
 		min-height: 44px;
 		border: 0;
 		background: transparent;
-		color: #9d3d2b;
+		color: var(--customer-danger);
 		cursor: pointer;
 	}
 	.sold-out-badge {
@@ -862,15 +862,18 @@
 		margin-top: 0.35rem;
 		border-radius: 999px;
 		padding: 0.18rem 0.5rem;
-		background: #7f1d1d;
-		color: white;
+		background: var(--customer-danger);
+		color: var(--customer-primary-foreground);
 		font-size: 0.72rem;
 		font-weight: 700;
 	}
 	@media (max-width: 760px) {
+		.table-header-currency {
+			display: none;
+		}
 		.table-category {
 			grid-template-columns: minmax(0, 1fr) !important;
-			scroll-margin-top: 9rem;
+			scroll-margin-top: 10rem;
 		}
 		.table-dishes {
 			grid-template-columns: minmax(0, 1fr) !important;

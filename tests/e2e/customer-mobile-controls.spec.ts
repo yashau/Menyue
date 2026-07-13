@@ -31,6 +31,7 @@ async function assertMobileControls(page: Page, width: number, route: (typeof ro
 	await page.evaluate(() => window.scrollBy(0, 160));
 	await expect(search).toBeVisible();
 	await expect(currency).toBeVisible();
+	await expect(page.locator('[data-testid^="currency-selector"]:visible')).toHaveCount(1);
 	await expect(mains).toBeVisible();
 	await expect.poll(async () => Math.round((await sidebar.boundingBox())?.y ?? -1)).toBeGreaterThanOrEqual(0);
 	await expect.poll(async () => Math.round((await sidebar.boundingBox())?.y ?? -1)).toBeLessThanOrEqual(1);
@@ -47,6 +48,18 @@ async function assertMobileControls(page: Page, width: number, route: (typeof ro
 	expect(searchBox!.height).toBeGreaterThanOrEqual(44);
 	expect(searchBox!.y).toBeGreaterThanOrEqual(0);
 	expect(searchBox!.y + searchBox!.height).toBeLessThanOrEqual(780);
+	const targetSizes = await tools
+		.locator('.customer-menu-search button, .customer-currency-selector button, .customer-category-rail a')
+		.evaluateAll((elements) =>
+			elements.map((element) => {
+				const box = element.getBoundingClientRect();
+				return { label: element.getAttribute('aria-label') ?? element.textContent, width: box.width, height: box.height };
+			}),
+		);
+	for (const target of targetSizes) {
+		expect(target.width, `${target.label} width`).toBeGreaterThanOrEqual(44);
+		expect(target.height, `${target.label} height`).toBeGreaterThanOrEqual(44);
+	}
 	await search.fill('Garden salad');
 	await expect(page.getByRole('article').filter({ hasText: 'Garden salad' }).first()).toBeVisible();
 	await tools.getByRole('button', { name: 'Clear search' }).click();

@@ -65,23 +65,23 @@
 
 <style>
 	.customer-menu-layout { display: grid; grid-template-columns: minmax(10.5rem, 14rem) minmax(0, 1fr); gap: clamp(1rem, 3vw, 2.5rem); align-items: start; min-width: 0; }
-	.customer-menu-sidebar { position: sticky; top: 1rem; display: grid; align-self: start; gap: 0.75rem; max-block-size: calc(100dvh - 2rem); min-width: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0.65rem; background: #fffdf8; }
+	.customer-menu-sidebar { position: sticky; top: 1rem; display: grid; align-self: start; gap: 0.75rem; max-block-size: calc(100dvh - 2rem); min-width: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0.65rem; background: var(--customer-paper); }
 	.customer-menu-content { min-width: 0; }
 	.customer-menu-controls { display: contents; }
 	.customer-menu-mobile-controls { display: none; }
-	.customer-menu-search { display: flex; flex: 1; min-height: 44px; align-items: center; border: 1px solid #d9d0c0; background: #fff; }
+	.customer-menu-search { display: flex; flex: 1; min-height: 44px; align-items: center; border: 1px solid var(--customer-border); background: var(--customer-surface); }
 	.customer-menu-search label { display: flex; flex: 1; }
-	.customer-menu-search input { min-width: 0; width: 100%; border: 0; padding: 0.72rem 0.75rem; color: var(--ink, #18372f); font: inherit; font-size: 0.86rem; }
-	.customer-menu-search input:focus-visible { outline: 3px solid var(--coral, #ec6a45); outline-offset: -3px; }
-	.customer-menu-search button { min-width: 44px; min-height: 44px; border: 0; background: transparent; color: var(--ink, #18372f); font-size: 1.2rem; cursor: pointer; }
-	.customer-menu-search button:focus-visible, .customer-category-rail a:focus-visible { outline: 3px solid var(--coral, #ec6a45); outline-offset: 2px; }
+	.customer-menu-search input { min-width: 0; width: 100%; border: 0; background: transparent; padding: 0.72rem 0.75rem; color: var(--customer-ink); font: inherit; font-size: 0.86rem; }
+	.customer-menu-search input:focus-visible { outline: 3px solid var(--customer-focus); outline-offset: -3px; }
+	.customer-menu-search button { min-width: 44px; min-height: 44px; border: 0; background: transparent; color: var(--customer-ink); font-size: 1.2rem; cursor: pointer; }
+	.customer-menu-search button:focus-visible, .customer-category-rail a:focus-visible { outline: 3px solid var(--customer-focus); outline-offset: 2px; }
 	.customer-category-rail { display: grid; gap: 0.35rem; padding: 0; }
-	.customer-category-rail a { display: block; border: 1px solid #d9d0c0; border-radius: 0.35rem; padding: 0.65rem 0.85rem; color: var(--ink, #18372f); font-size: 0.78rem; text-decoration: none; }
-	.customer-category-rail a:hover { background: #eee4d4; }
-	.customer-category-rail a.current { border-color: var(--ink, #18372f); background: var(--ink, #18372f); color: #fff; font-weight: 750; }
+	.customer-category-rail a { display: block; min-height: 44px; border: 1px solid var(--customer-border); border-radius: 0.35rem; padding: 0.65rem 0.85rem; color: var(--customer-ink); font-size: 0.78rem; text-decoration: none; }
+	.customer-category-rail a:hover { background: color-mix(in oklch, var(--customer-surface) 82%, var(--customer-primary)); }
+	.customer-category-rail a.current { border-color: var(--customer-primary); background: var(--customer-primary); color: var(--customer-primary-foreground); font-weight: 750; }
 	@media (max-width: 760px) {
 		.customer-menu-layout { display: block; }
-		.customer-menu-sidebar { position: sticky; z-index: 5; top: 0; gap: 0.55rem; max-block-size: none; margin: 0 0 1.4rem; padding: max(0.55rem, env(safe-area-inset-top)) 0 0.55rem; box-shadow: 0 0.35rem 0.8rem rgb(24 55 47 / 0.12); }
+		.customer-menu-sidebar { position: sticky; z-index: 5; top: 0; gap: 0.55rem; max-block-size: none; margin: 0 0 1.4rem; padding: max(0.55rem, env(safe-area-inset-top)) 0 0.55rem; box-shadow: 0 0.35rem 0.8rem color-mix(in oklch, var(--customer-ink) 14%, transparent); }
 		.customer-menu-controls { display: flex; min-width: 0; align-items: stretch; gap: 0.45rem; }
 		.customer-menu-search { min-width: 0; }
 		.customer-menu-mobile-controls { display: flex; flex: none; }

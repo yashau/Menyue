@@ -578,6 +578,8 @@
 		--customer-border: #d9d0c0;
 		--customer-muted: #557067;
 		--customer-focus: #111827;
+		--customer-danger: #9e3622;
+		--customer-success: #287349;
 		--ink: var(--customer-ink);
 		--paper: var(--customer-paper);
 		--coral: var(--customer-accent);
@@ -695,7 +697,7 @@
 		font-size: 1.8rem !important;
 	}
 	.table-category-head span {
-		color: #748077;
+		color: var(--customer-muted);
 		font-size: 0.72rem;
 	}
 	.table-dishes {
@@ -774,7 +776,7 @@
 		max-width: 38rem;
 	}
 	.hint {
-		color: #62746b;
+		color: var(--customer-muted);
 		font-size: 0.77rem;
 		line-height: 1.45;
 	}
@@ -1230,11 +1232,11 @@
 		font-size: 0.85rem;
 	}
 	.form-message {
-		color: #9e3622;
+		color: var(--customer-danger);
 		font-size: 0.85rem;
 	}
 	.form-message.success {
-		color: #287349;
+		color: var(--customer-success);
 	}
 	.editorial-page {
 		max-width: 1050px;
@@ -2076,17 +2078,21 @@
 		margin: 0;
 		background: var(--customer-surface);
 		padding: 0.8rem 1rem;
-		color: #9e3622;
+		color: var(--customer-danger);
 		box-shadow: 0 6px 20px rgb(24 55 47 / 0.15);
 		font-size: 0.85rem;
 	}
 	.table-toast.success {
-		color: #287349;
+		color: var(--customer-success);
 	}
 	/* This layer owns the earlier dense-menu !important declarations. Keep the
 	   table order surface to one column at touch widths so fixed controls remain
 	   above, and reachable beside, the menu. */
 	@media (max-width: 760px) {
+		.table-header-currency,
+		.public-nav > .customer-currency-selector {
+			display: none;
+		}
 		.table-shell .table-category {
 			grid-template-columns: minmax(0, 1fr) !important;
 		}
@@ -2106,10 +2112,21 @@
 		--customer-border: #46574e;
 		--customer-muted: #b6c5bd;
 		--customer-focus: #ffffff;
+		--customer-danger: #ffb4a8;
+		--customer-success: #96d9ae;
 		--leaf: #496448;
 		--sand: #283830;
 	}
 	.customer-brand .hero-art .sun-disc { box-shadow: 0 0 0 45px rgb(16 25 21 / 0.32); }
 	.customer-brand .order-confirmation::backdrop { background: rgb(0 0 0 / 0.76); }
 	.customer-brand .sold-out-badge { background: #b42318; color: #ffffff; }
+}
+
+/* Component-local selector styles are intentionally unlayered, so this mobile
+   visibility rule must be unlayered as well to keep the duplicate header
+   selector out of the tab order and visual layout. */
+@media (max-width: 760px) {
+	.public-nav > .customer-currency-selector {
+		display: none !important;
+	}
 }
