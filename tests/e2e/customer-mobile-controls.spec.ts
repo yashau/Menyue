@@ -24,7 +24,9 @@ async function assertMobileControls(page: Page, width: number, route: (typeof ro
 	const searchControl = tools.locator('.customer-menu-search');
 	const search = tools.getByRole('textbox', { name: route.searchLabel });
 	const currency = page.getByTestId('currency-selector-sticky');
-	const euro = currency.getByRole('button', { name: /Display prices in Euro \(EUR\), Restaurant rate/ });
+	const euro = currency.getByRole('button', {
+		name: /Display prices in Euro \(EUR\), Restaurant rate/,
+	});
 	const mains = tools.getByRole('link', { name: 'Mains' });
 
 	await tools.scrollIntoViewIfNeeded();
@@ -33,8 +35,12 @@ async function assertMobileControls(page: Page, width: number, route: (typeof ro
 	await expect(currency).toBeVisible();
 	await expect(page.locator('[data-testid^="currency-selector"]:visible')).toHaveCount(1);
 	await expect(mains).toBeVisible();
-	await expect.poll(async () => Math.round((await sidebar.boundingBox())?.y ?? -1)).toBeGreaterThanOrEqual(0);
-	await expect.poll(async () => Math.round((await sidebar.boundingBox())?.y ?? -1)).toBeLessThanOrEqual(1);
+	await expect
+		.poll(async () => Math.round((await sidebar.boundingBox())?.y ?? -1))
+		.toBeGreaterThanOrEqual(0);
+	await expect
+		.poll(async () => Math.round((await sidebar.boundingBox())?.y ?? -1))
+		.toBeLessThanOrEqual(1);
 
 	await expect(euro).toBeVisible();
 	await euro.click();
@@ -49,11 +55,17 @@ async function assertMobileControls(page: Page, width: number, route: (typeof ro
 	expect(searchBox!.y).toBeGreaterThanOrEqual(0);
 	expect(searchBox!.y + searchBox!.height).toBeLessThanOrEqual(780);
 	const targetSizes = await tools
-		.locator('.customer-menu-search button, .customer-currency-selector button, .customer-category-rail a')
+		.locator(
+			'.customer-menu-search button, .customer-currency-selector button, .customer-category-rail a',
+		)
 		.evaluateAll((elements) =>
 			elements.map((element) => {
 				const box = element.getBoundingClientRect();
-				return { label: element.getAttribute('aria-label') ?? element.textContent, width: box.width, height: box.height };
+				return {
+					label: element.getAttribute('aria-label') ?? element.textContent,
+					width: box.width,
+					height: box.height,
+				};
 			}),
 		);
 	for (const target of targetSizes) {
@@ -62,17 +74,29 @@ async function assertMobileControls(page: Page, width: number, route: (typeof ro
 	}
 	await search.fill('Garden salad');
 	await expect(page.getByRole('article').filter({ hasText: 'Garden salad' }).first()).toBeVisible();
+	await expect(page.getByTestId('menu-search-result-count')).toContainText('1 result');
 	await tools.getByRole('button', { name: 'Clear search' }).click();
+	await search.fill('definitely-not-on-this-menu');
+	await expect(page.getByTestId('menu-search-empty')).toBeVisible();
+	await tools.getByRole('button', { name: 'Show all dishes' }).click();
+	await expect(page.getByTestId('dish-local-item-burger')).toBeVisible();
 
 	await mains.click();
 	await expect(mains).toHaveAttribute('aria-current', 'location');
 	await expect(page).toHaveURL(/#local-category-mains$/);
 	const target = page.locator('#local-category-mains');
-	await expect.poll(async () => {
-		const [targetBox, sidebarBox] = await Promise.all([target.boundingBox(), sidebar.boundingBox()]);
-		return Math.round((targetBox?.y ?? -1) - ((sidebarBox?.y ?? 0) + (sidebarBox?.height ?? 0)));
-	}).toBeGreaterThanOrEqual(-1);
-	await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+	await expect
+		.poll(async () => {
+			const [targetBox, sidebarBox] = await Promise.all([
+				target.boundingBox(),
+				sidebar.boundingBox(),
+			]);
+			return Math.round((targetBox?.y ?? -1) - ((sidebarBox?.y ?? 0) + (sidebarBox?.height ?? 0)));
+		})
+		.toBeGreaterThanOrEqual(-1);
+	await expect
+		.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth))
+		.toBe(true);
 	expect(problems).toEqual([]);
 }
 
@@ -80,7 +104,9 @@ for (const route of routes) {
 	for (const width of mobileWidths) {
 		test(`${route.name} mobile controls persist at ${width}px`, async ({ page }, testInfo) => {
 			await assertMobileControls(page, width, route);
-			await page.screenshot({ path: testInfo.outputPath(`${route.name}-${width}-mobile-controls.png`) });
+			await page.screenshot({
+				path: testInfo.outputPath(`${route.name}-${width}-mobile-controls.png`),
+			});
 		});
 	}
 }

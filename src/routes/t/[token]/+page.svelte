@@ -4,7 +4,7 @@
 		type ClientBaseCurrency,
 		type ClientDisplayCurrency,
 	} from '$lib/currency';
-	import { customerMenuSearchText } from '$lib/customer-menu';
+	import { createCustomerMenuSearchIndex } from '$lib/customer-menu';
 	import {
 		addBundle,
 		cartTotalMinor,
@@ -52,6 +52,8 @@
 	let selected = $state('');
 	let cartOpen = $state(false);
 	let search = $state('');
+	const searchIndex = createCustomerMenuSearchIndex(data.menu.categories);
+	const searchResults = $derived(searchIndex.search(search));
 	let orderNumber = $state<number | null>(null);
 	let confirmation = $state<HTMLDialogElement>();
 	let wizard = $state<HTMLDialogElement>();
@@ -408,12 +410,6 @@
 	function remove(line: OrderVariant) {
 		cart = removeVariant(cart, line.lineId);
 	}
-	function visible(item: Parameters<typeof customerMenuSearchText>[0], category: { name: string }) {
-		return (
-			!search.trim() ||
-			customerMenuSearchText(item, category.name).includes(search.trim().toLowerCase())
-		);
-	}
 	function openBeveragePrompt() {
 		rememberDialogTrigger();
 		beverageDialog?.showModal();
@@ -506,11 +502,10 @@
 				/>{/if}<span>{data.menu.hero.title}</span></a
 		>
 		<div class="table-nav-actions">
-			<span class="table-label">{data.table.label}</span><div class="table-header-currency"><CurrencySelector
-				{base}
-				{quotes}
-				bind:value={selected}
-			/></div>
+			<span class="table-label">{data.table.label}</span>
+			<div class="table-header-currency">
+				<CurrencySelector {base} {quotes} bind:value={selected} />
+			</div>
 		</div>
 	</header>
 	<section class="table-intro compact">
@@ -519,7 +514,12 @@
 		<p>Search the menu or jump straight to a category.</p>
 	</section>
 	<div class="table-menu-layout">
-		<MenuTools categories={data.menu.categories} searchLabel="Search dishes" bind:search
+		<MenuTools
+			categories={searchResults.groups.map((group) => group.category)}
+			searchLabel="Search dishes"
+			resultCount={searchResults.resultCount}
+			searchActive={Boolean(searchResults.query)}
+			bind:search
 			>{#snippet controls()}<CurrencySelector
 					{base}
 					{quotes}
@@ -527,44 +527,39 @@
 					testId="currency-selector-sticky"
 				/>{/snippet}
 			<section class="table-menu">
-				{#each data.menu.categories as category}{@const items = category.items.filter((item) =>
-						visible(item, category),
-					)}{#if items.length}<section id={category.id} class="table-category">
-							<div class="table-category-head">
-								<h2>{category.name}</h2>
-								<span>{items.length} dishes</span>
-							</div>
-							<div class="table-dishes">
-								{#each items as item}<article class="table-dish" data-testid={`dish-${item.id}`}>
-										<MenuItemImage {item} className="table-dish-image" />
-										<div class="table-dish-top">
-											<div>
-												<h3>{item.name}</h3>
-												{#if item.description}<p>{item.description}</p>{/if}<MenuItemMetadata
-													{item}
-												/>{#if item.availability === 'sold_out'}<span
-														class="sold-out-badge"
-														role="status">Sold out</span
-													>{/if}
-											</div>
-											<strong>{money(item.promotion?.priceMinor ?? item.priceMinor)}</strong>
-										</div>
-										<Button
-											size="sm"
-											data-testid={`add-${item.id}`}
-											disabled={item.availability === 'sold_out'}
-											onclick={() => add(item.id)}
-											>{item.availability === 'sold_out' ? 'Sold out' : 'Add'}</Button
-										>
-									</article>{/each}
-							</div>
-						</section>{/if}{/each}{#if !data.menu.categories.some( (category) => category.items.some( (item) => visible(item, category) ) )}<div
-						class="empty-menu"
+				{#each searchResults.groups as { category, items }}<section
+						id={category.id}
+						class="table-category"
 					>
-						<h2>No dishes found</h2>
-						<p>Try a dish, category, allergy or dietary term.</p>
-						<button onclick={() => (search = '')}>Clear search</button>
-					</div>{/if}
+						<div class="table-category-head">
+							<h2>{category.name}</h2>
+							<span>{items.length} dishes</span>
+						</div>
+						<div class="table-dishes">
+							{#each items as item}<article class="table-dish" data-testid={`dish-${item.id}`}>
+									<MenuItemImage {item} className="table-dish-image" />
+									<div class="table-dish-top">
+										<div>
+											<h3>{item.name}</h3>
+											{#if item.description}<p>{item.description}</p>{/if}<MenuItemMetadata
+												{item}
+											/>{#if item.availability === 'sold_out'}<span
+													class="sold-out-badge"
+													role="status">Sold out</span
+												>{/if}
+										</div>
+										<strong>{money(item.promotion?.priceMinor ?? item.priceMinor)}</strong>
+									</div>
+									<Button
+										size="sm"
+										data-testid={`add-${item.id}`}
+										disabled={item.availability === 'sold_out'}
+										onclick={() => add(item.id)}
+										>{item.availability === 'sold_out' ? 'Sold out' : 'Add'}</Button
+									>
+								</article>{/each}
+						</div>
+					</section>{/each}
 			</section></MenuTools
 		>
 	</div>
