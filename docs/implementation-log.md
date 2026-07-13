@@ -15,8 +15,12 @@
 
 1. Create an ignored `.dev.vars` file containing `AUTH_PEPPER="<a long random local secret>"`. Set the same value in the shell before bootstrapping (`$env:AUTH_PEPPER="..."` in PowerShell). Never commit it.
 2. Run `pnpm migrate:local` to create the local D1 schema.
-3. Run `pnpm bootstrap:local -- admin <12+ character staff password> <12+ character counter password>`.
-4. Run `pnpm dev`, sign in at `/admin/login`, and use `/counter/login` for the counter board. The bootstrap refuses to replace an existing enabled admin and marks the first password as temporary.
+3. Run `pnpm bootstrap:local -- admin <12+ character staff password>`.
+4. Sign in at `/admin/login`, change the temporary password, then create a tenant-scoped counter operator at `/admin/counter-operators`. There is no shared or default production counter password. The bootstrap refuses to replace an existing enabled admin and marks the first password as temporary.
+
+### Counter operator migration
+
+Migration `0016_counter_operators_and_event_actors.sql` retires the shared credential from the login path without deleting its historical row. Before or immediately after applying it, an enabled administrator must create at least one operator for each restaurant through `/admin/counter-operators`; until then counter login intentionally returns a generic failure. Each operator is tenant-scoped, PBKDF2+`AUTH_PEPPER` hashed, and can be disabled, reset, or have sessions revoked from that page.
 
 For real Cloudflare environments, replace the placeholder D1 database ID and bucket name, configure the required `AUTH_PEPPER` Worker secret, then generate bindings with `pnpm gen`; deployment is deliberately outside this repository task.
 

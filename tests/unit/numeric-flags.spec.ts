@@ -3,7 +3,7 @@ import { projectPublicMenu } from '../../src/lib/server/menu';
 it('does not project numeric disabled rows', () => {
 	const m = projectPublicMenu({
 		revision: 1,
-		currency: 'MVR',
+		currency: 'USD',
 		hero: { title: 'x' },
 		categories: [
 			{
