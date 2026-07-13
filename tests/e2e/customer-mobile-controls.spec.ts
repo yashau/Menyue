@@ -50,10 +50,19 @@ async function assertMobileControls(page: Page, width: number, route: (typeof ro
 	await search.focus();
 	await expect(search).toBeFocused();
 	const searchBox = await searchControl.boundingBox();
+	const inputBox = await search.boundingBox();
+	const currencyBox = await currency.boundingBox();
 	expect(searchBox).not.toBeNull();
+	expect(inputBox).not.toBeNull();
+	expect(currencyBox).not.toBeNull();
 	expect(searchBox!.height).toBeGreaterThanOrEqual(44);
 	expect(searchBox!.y).toBeGreaterThanOrEqual(0);
 	expect(searchBox!.y + searchBox!.height).toBeLessThanOrEqual(780);
+	if (width === 320) {
+		expect(searchBox!.width).toBeGreaterThanOrEqual(260);
+		expect(inputBox!.width).toBeGreaterThanOrEqual(200);
+		expect(searchBox!.y + searchBox!.height).toBeLessThanOrEqual(currencyBox!.y + 1);
+	}
 	const targetSizes = await tools
 		.locator(
 			'.customer-menu-search button, .customer-currency-selector button, .customer-category-rail a',

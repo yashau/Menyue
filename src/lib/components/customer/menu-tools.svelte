@@ -278,4 +278,14 @@
 			border-radius: 99px;
 		}
 	}
+	@media (max-width: 420px) {
+		.customer-menu-controls {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.customer-menu-search,
+		.customer-menu-mobile-controls {
+			width: 100%;
+		}
+	}
 </style>

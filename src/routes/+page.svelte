@@ -21,7 +21,7 @@
 	const quotes = $derived((data.menu.displayCurrencies ?? []) as ClientDisplayCurrency[]);
 	const quote = $derived(quotes.find((entry) => entry.code === selected));
 	const money = (minor: number) => customerMoney(minor, base, quote);
-	const searchIndex = createCustomerMenuSearchIndex(data.menu.categories);
+	const searchIndex = $derived(createCustomerMenuSearchIndex(data.menu.categories));
 	const searchResults = $derived(searchIndex.search(search));
 	const cta = $derived(
 		data.menu.hero.ctaUrl?.startsWith('/') || data.menu.hero.ctaUrl?.startsWith('#')
@@ -136,6 +136,11 @@
 	@media (max-width: 760px) {
 		.menu-category {
 			scroll-margin-top: 9rem;
+		}
+	}
+	@media (max-width: 420px) {
+		.menu-category {
+			scroll-margin-top: 12rem;
 		}
 	}
 	@media (min-width: 761px) and (max-width: 900px) {

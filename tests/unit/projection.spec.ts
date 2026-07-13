@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { projectPublicMenu } from '../../src/lib/server/menu';
-import { customerAllergyNotices, customerMenuImageSource, customerMenuSearchText } from '../../src/lib/customer-menu';
+import { createCustomerMenuSearchIndex, customerAllergyNotices, customerMenuImageSource, customerMenuSearchText } from '../../src/lib/customer-menu';
 describe('public menu projection', () =>
 	it('omits optional empty values and disabled records', () => {
 		const menu = projectPublicMenu({
@@ -69,5 +69,13 @@ describe('customer menu assets and metadata', () => {
 		expect(customerAllergyNotices(item)).toEqual(['Contains gluten and dairy.']);
 		expect(customerMenuSearchText(item, 'Mains')).toContain('available today');
 		expect(customerAllergyNotices({ allergens: [{ name: 'nuts', severity: 'may_contain' }] })).toEqual(['May contain nuts.']);
+	});
+
+	it('rebuilds search results from a replacement menu payload', () => {
+		const before = createCustomerMenuSearchIndex([{ id: 'mains', name: 'Mains', items: [{ id: 'burger', code: 'BURGER', name: 'Menyue burger', priceMinor: 1450, availability: 'available' }] }]);
+		const after = createCustomerMenuSearchIndex([{ id: 'drinks', name: 'Drinks', items: [{ id: 'water', code: 'WATER', name: 'Lime water', priceMinor: 250, availability: 'available' }] }]);
+		expect(before.search('burger').groups[0]?.items.map((item) => item.id)).toEqual(['burger']);
+		expect(after.search('burger').resultCount).toBe(0);
+		expect(after.search('water').groups[0]?.category.id).toBe('drinks');
 	});
 });

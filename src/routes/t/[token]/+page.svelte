@@ -52,7 +52,7 @@
 	let selected = $state('');
 	let cartOpen = $state(false);
 	let search = $state('');
-	const searchIndex = createCustomerMenuSearchIndex(data.menu.categories);
+	const searchIndex = $derived(createCustomerMenuSearchIndex(data.menu.categories));
 	const searchResults = $derived(searchIndex.search(search));
 	let orderNumber = $state<number | null>(null);
 	let confirmation = $state<HTMLDialogElement>();
@@ -901,6 +901,11 @@
 		}
 		.cart-line-controls {
 			justify-content: flex-start;
+		}
+	}
+	@media (max-width: 420px) {
+		.table-category {
+			scroll-margin-top: 12rem;
 		}
 	}
 </style>
