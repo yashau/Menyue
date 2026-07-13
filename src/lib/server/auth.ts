@@ -90,6 +90,16 @@ export async function requireCsrf(event: {
 	cookies: { get(name: string): string | undefined };
 	locals: App.Locals;
 }): Promise<void> {
+	const source = event.request.headers.get('origin') ?? event.request.headers.get('referer');
+	if (source) {
+		try {
+			if (new URL(source).origin !== new URL(event.request.url).origin)
+				throw error(403, 'Invalid request origin.');
+		} catch (cause) {
+			if (cause instanceof Response) throw cause;
+			throw error(403, 'Invalid request origin.');
+		}
+	}
 	const supplied = event.request.headers.get('x-csrf-token') ?? event.cookies.get('menyue_csrf');
 	const expected = event.locals.user?.csrf ?? event.locals.counter?.csrf;
 	if (!supplied || !expected || (await sha256(supplied)) !== expected)

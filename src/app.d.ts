@@ -10,7 +10,12 @@ declare global {
 				csrf: string;
 				mustChange?: boolean;
 			};
-			counter?: { csrf: string };
+			counter?: {
+				csrf: string;
+				operatorId: string;
+				displayName: string;
+				restaurantId: string;
+			};
 		}
 		interface Platform {
 			env: Env;

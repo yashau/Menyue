@@ -1,4 +1,5 @@
 import type { Role } from '$lib/types';
+import { error } from '@sveltejs/kit';
 export type Capability =
 	| 'menu:write'
 	| 'hero:write'
@@ -14,8 +15,10 @@ export function can(role: Role | undefined, capability: Capability): boolean {
 	return !!role && grants[role].includes(capability);
 }
 export function requireCapability(locals: App.Locals, capability: Capability): void {
-	if (!locals.user || !can(locals.user.role, capability)) throw new Error('FORBIDDEN');
+	if (!locals.user) throw error(401, 'Authentication is required.');
+	if (!can(locals.user.role, capability)) throw error(403, 'You do not have permission to do that.');
 }
 export function requireAdmin(locals: App.Locals): void {
-	if (locals.user?.role !== 'admin') throw new Error('FORBIDDEN');
+	if (!locals.user) throw error(401, 'Authentication is required.');
+	if (locals.user.role !== 'admin') throw error(403, 'You do not have permission to do that.');
 }

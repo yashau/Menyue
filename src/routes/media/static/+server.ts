@@ -1,3 +1,4 @@
+import { isSafeCustomerMenuImageUrl } from '$lib/customer-menu';
 import type { RequestHandler } from '@sveltejs/kit';
 
 const fallback = () =>
@@ -6,18 +7,15 @@ const fallback = () =>
 		{ headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } },
 	);
 
-export const GET: RequestHandler = async ({ params, platform }) => {
-	const asset = await platform!.env.DB.prepare(
-		"SELECT r2_key,content_type FROM media_assets WHERE id=? AND state='active'",
-	)
-		.bind(params.assetId)
-		.first<{ r2_key: string; content_type: string }>();
-	if (!asset) return fallback();
-	const object = await platform!.env.MEDIA.get(asset.r2_key);
-	if (!object) return fallback();
-	return new Response(object.body, {
+export const GET: RequestHandler = async ({ fetch, url }) => {
+	const source = url.searchParams.get('src');
+	if (!source || !isSafeCustomerMenuImageUrl(source)) return fallback();
+	const asset = await fetch(new URL(source, url.origin));
+	const contentType = asset.headers.get('content-type') ?? '';
+	if (!asset.ok || !contentType.startsWith('image/')) return fallback();
+	return new Response(asset.body, {
 		headers: {
-			'Content-Type': asset.content_type,
+			'Content-Type': contentType,
 			'Cache-Control': 'public, max-age=31536000, immutable',
 			'X-Content-Type-Options': 'nosniff',
 		},
