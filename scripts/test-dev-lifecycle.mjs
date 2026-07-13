@@ -1,6 +1,7 @@
 import { execFile, spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
+import { waitForCustomerRuntime } from './dev-runtime-integrity.mjs';
 
 const root = resolve('.');
 const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -147,19 +148,15 @@ async function runCycle(cycle) {
 	child.stdout.on('data', (chunk) => (output += chunk));
 	child.stderr.on('data', (chunk) => (output += chunk));
 
-	const deadline = Date.now() + 180_000;
 	try {
-		while (Date.now() < deadline) {
-			try {
-				const response = await fetch('http://127.0.0.1:5173/', { redirect: 'manual' });
-				console.log(`Cycle ${cycle}: HTTP ${response.status} received from 0.0.0.0:5173.`);
-				return;
-			} catch {
-				if (child.exitCode !== null) throw new Error(output);
-				await sleep(250);
-			}
-		}
-		throw new Error(`Cycle ${cycle} timed out waiting for the development server.\n${output}`);
+		const exited = new Promise((_, reject) => {
+			child.once('exit', (code) => reject(new Error(`Cycle ${cycle} development process exited with code ${code ?? 1}.\n${output}`)));
+		});
+		const runtime = await Promise.race([
+			waitForCustomerRuntime('http://127.0.0.1:5173', 180_000),
+			exited,
+		]);
+		console.log(`Cycle ${cycle}: customer hydration graph verified (${runtime.modules} JavaScript modules).`);
 	} finally {
 		await stop(child);
 		await waitForPortToClose();
