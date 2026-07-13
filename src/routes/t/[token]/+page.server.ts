@@ -11,6 +11,8 @@ export const load: PageServerLoad = async ({ params, platform }) => {
 	if (!table) throw error(404, 'This table link is unavailable.');
 	return {
 		table: { label: table.label },
+		// Issued on the server so plain HTTP LAN clients never call randomUUID during hydration.
+		idempotencyKey: crypto.randomUUID(),
 		menu: await getPublicMenu(platform!.env.DB, table.restaurant_id),
 	};
 };

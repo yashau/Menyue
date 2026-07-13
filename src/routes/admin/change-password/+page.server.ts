@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { passwordHash, requireCsrf, requireUser } from '$lib/server/auth';
+import { audit } from '$lib/server/audit';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -33,6 +34,7 @@ export const actions: Actions = {
 				)
 				.bind(event.locals.user.id),
 		]);
+		await audit(event.platform!.env.DB, event.locals.user.id, 'user.password.changed', 'user', event.locals.user.id);
 		event.cookies.delete('menyue_session', { path: '/' });
 		event.cookies.delete('menyue_csrf', { path: '/' });
 		throw redirect(303, '/admin/login');

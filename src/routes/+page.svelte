@@ -1,51 +1,40 @@
 <script lang="ts">
+	import { customerMoney, type ClientBaseCurrency, type ClientDisplayCurrency } from '$lib/currency';
+	import { customerMenuSearchText } from '$lib/customer-menu';
+	import CurrencySelector from '$lib/components/customer/currency-selector.svelte';
+	import MenuItemImage from '$lib/components/customer/menu-item-image.svelte';
+	import MenuItemMetadata from '$lib/components/customer/menu-item-metadata.svelte';
+	import MenuTools from '$lib/components/customer/menu-tools.svelte';
 	import type { PageData } from './$types';
 	let { data }: { data: PageData } = $props();
-	const money = (n: number) =>
-		new Intl.NumberFormat('en-MV', { style: 'currency', currency: data.menu.currency }).format(
-			n / 100,
-		);
-	const cta = $derived(
-		data.menu.hero.ctaUrl?.startsWith('/') || data.menu.hero.ctaUrl?.startsWith('#')
-			? data.menu.hero.ctaUrl
-			: '#menu',
-	);
+	let selected = $state(''), search = $state('');
+	const base = $derived({ code: data.menu.currency, minorUnit: data.menu.currencyMinorUnit, locale: data.menu.currencyLocale } as ClientBaseCurrency);
+	const quotes = $derived((data.menu.displayCurrencies ?? []) as ClientDisplayCurrency[]);
+	const quote = $derived(quotes.find((entry) => entry.code === selected));
+	const money = (minor: number) => customerMoney(minor, base, quote);
+	const visible = (item: Parameters<typeof customerMenuSearchText>[0], category:{name:string}) => !search.trim() || customerMenuSearchText(item, category.name).includes(search.trim().toLowerCase());
+	const cta = $derived(data.menu.hero.ctaUrl?.startsWith('/') || data.menu.hero.ctaUrl?.startsWith('#') ? data.menu.hero.ctaUrl : '#menu');
 </script>
 
-<main class="mx-auto max-w-5xl p-6">
-	<section>
-		{#if data.menu.hero.photoId}<img
-				class="h-72 w-full rounded-xl object-cover"
-				src={`/media/${data.menu.hero.photoId}`}
-				alt="Restaurant"
-			/>{/if}
-		<h1 class="mt-6 text-5xl font-semibold">{data.menu.hero.title}</h1>
-		{#if data.menu.hero.description}<p>{data.menu.hero.description}</p>{/if}<a href={cta}
-			>{data.menu.hero.ctaLabel ?? 'View menu'}</a
-		>
+<svelte:head><title>{data.menu.hero.title} — Menyue</title><meta name="description" content={data.menu.hero.description ?? 'Menyue dining'} /></svelte:head>
+<main class="public-shell customer-brand" style:--customer-primary={data.menu.brand.primary} style:--customer-primary-foreground={data.menu.brand.primaryForeground} style:--customer-accent={data.menu.brand.accent} style:--customer-accent-foreground={data.menu.brand.accentForeground}>
+	<header class="public-nav"><a class="wordmark customer-wordmark" href="/">{#if data.menu.brand.logoAssetId}<img src={`/media/${data.menu.brand.logoAssetId}`} alt={`${data.menu.hero.title} logo`} />{/if}<span>{data.menu.hero.title}</span></a><nav aria-label="Main navigation"><a href="#menu">The menu</a><a href="#about">Our table</a></nav><CurrencySelector base={base} quotes={quotes} bind:value={selected} /></header>
+	<section class="hero-grid" id="about"><div class="hero-copy"><p class="eyebrow">Restaurant menu</p><h1>{data.menu.hero.title}</h1><p class="lede">{data.menu.hero.description ?? 'A bright, generous table for long lunches and late evenings.'}</p><a class="editorial-link" href={cta}>{data.menu.hero.ctaLabel ?? 'Explore the menu'} <span>↘</span></a></div><div class="hero-art">{#if data.menu.hero.photoId}<img src={`/media/${data.menu.hero.photoId}`} alt="A table at Menyue" />{:else}<div class="sun-disc"></div><p>Gather slowly.<br />Eat beautifully.</p>{/if}</div></section>
+	<section id="menu" class="menu-section"><div class="menu-heading compact"><p class="eyebrow">Today’s selection</p><h2>Browse the menu.</h2></div><MenuTools categories={data.menu.categories} bind:search>
+		{#snippet controls()}<CurrencySelector base={base} quotes={quotes} bind:value={selected} testId="currency-selector-sticky" />{/snippet}
+		{#each data.menu.categories as category, categoryIndex}{@const items=category.items.filter((item)=>visible(item,category))}{#if items.length}<section id={category.id} class="menu-category"><div class="category-index">0{categoryIndex + 1}</div><div><h3>{category.name}</h3>{#if category.description}<p class="category-note">{category.description}</p>{/if}</div><div class="dish-list">{#each items as item}<article class="dish-card" data-testid={`dish-${item.id}`}><div class="dish-image"><MenuItemImage {item} /></div><div class="dish-body"><div class="dish-title"><h4>{item.name}</h4><strong>{money(item.promotion?.priceMinor ?? item.priceMinor)}</strong></div>{#if item.description}<p>{item.description}</p>{/if}<MenuItemMetadata {item} /></div></article>{/each}</div></section>{/if}{/each}{#if !data.menu.categories.some((category)=>category.items.some((item)=>visible(item,category)))}<div class="empty-menu"><h2>No dishes found</h2><button onclick={() => search=''}>Clear search</button></div>{/if}
+	</MenuTools>
 	</section>
-	<section id="menu">
-		{#each data.menu.categories as category}<h2 class="mt-10 text-2xl">{category.name}</h2>
-			{#each category.items as item}<article class="mt-4 rounded bg-white p-4">
-					<div class="flex justify-between">
-						<strong>{item.name}</strong><span
-							>{money(item.promotion?.priceMinor ?? item.priceMinor)}</span
-						>
-					</div>
-					{#if item.photoId}<img
-							class="mt-3 h-40 w-full object-cover"
-							src={`/media/${item.photoId}`}
-							alt={item.name}
-						/>{/if}{#if item.description}<p>{item.description}</p>{/if}{#if item.promotion}<p>
-							{item.promotion.label}{#if item.promotion.description}: {item.promotion
-									.description}{/if}
-						</p>{/if}{#if item.allergens?.length}<p>
-							Allergens: {item.allergens.map((a) => a.name).join(', ')}
-						</p>{/if}{#if item.comboGroups?.length}<p>
-							{item.comboGroups
-								.map((g) => `${g.name} (${g.minChoices}-${g.maxChoices})`)
-								.join(' · ')}
-						</p>{/if}
-				</article>{/each}{/each}
-	</section>
+	<footer class="public-footer"><span>MENYUE</span><p>Come hungry. Leave happy.</p><a href="#top">Back to top ↑</a></footer>
 </main>
+
+<style>
+	.public-shell { overflow-x: clip; overflow-y: visible; }
+	.public-shell :is(a, button):focus-visible { outline: 3px solid var(--customer-focus); outline-offset: 3px; }
+	.menu-category { scroll-margin-top: 1.25rem; }
+	@media (max-width: 760px) { .menu-category { scroll-margin-top: 9rem; } }
+	@media (min-width: 761px) and (max-width: 900px) {
+		.menu-category { grid-template-columns: 42px minmax(0, 1fr); }
+		.dish-list { grid-column: 1 / -1; }
+	}
+</style>

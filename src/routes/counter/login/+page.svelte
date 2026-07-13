@@ -1,24 +1,21 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
 	import type { ActionData } from './$types';
-	let { form }: { form: ActionData } = $props();
+	let { form }: { form: ActionData | null } = $props();
 </script>
 
-<main class="grid min-h-screen place-items-center bg-amber-50 p-6">
-	<form method="POST" class="w-full max-w-sm rounded-xl bg-white p-7 shadow-sm">
-		<h1 class="text-2xl font-semibold">Counter board</h1>
-		<p class="mt-2 text-sm text-muted-foreground">Use the counter password to continue.</p>
-		{#if form?.message}<p class="mt-4 text-sm text-destructive">{form.message}</p>{/if}
-		<div class="mt-6 grid gap-2">
-			<Label for="password">Password</Label><Input
-				id="password"
-				type="password"
-				name="password"
-				required
-			/>
-		</div>
-		<Button class="mt-6 w-full">Open board</Button>
+<svelte:head><title>Counter access · Menyue</title></svelte:head>
+
+<main class="counter-login">
+	<form method="POST">
+		<a class="wordmark" href="/">MENYUE</a>
+		<p class="eyebrow">Counter access</p>
+		<h1>Service board</h1>
+		<p>Sign in with your counter operator account to open the live kitchen feed.</p>
+		{#if form?.message}<p id="counter-login-error" class="auth-error" role="alert">{form.message}</p>{/if}
+		<label for="username">Username</label>
+		<input id="username" name="username" autocomplete="username" />
+		<label for="password">Password</label>
+		<input id="password" name="password" type="password" autocomplete="current-password" required aria-invalid={form?.message ? 'true' : undefined} aria-describedby={form?.message ? 'counter-login-error' : undefined} />
+		<button type="submit">Open board <span aria-hidden="true">→</span></button>
 	</form>
 </main>

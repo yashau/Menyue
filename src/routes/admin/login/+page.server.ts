@@ -1,5 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { createSession, safeReturn, secureCookie, verifyPassword } from '$lib/server/auth';
+import { audit } from '$lib/server/audit';
 import type { Actions } from './$types';
 export const actions: Actions = {
 	default: async (event) => {
@@ -48,6 +49,7 @@ export const actions: Actions = {
 			secure: secureCookie(event),
 			maxAge: 86400,
 		});
+		await audit(event.platform!.env.DB, user.id, 'auth.login', 'user', user.id);
 		throw redirect(303, safeReturn(event.url.searchParams.get('returnTo')));
 	},
 };
